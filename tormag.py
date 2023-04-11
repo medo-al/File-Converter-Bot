@@ -137,32 +137,6 @@ def decodeurl(url):
     return soup.find("textarea",id="string2").string
 
 
-def getTorFile(maglink):
-    id = maglink.split("magnet:?xt=urn:btih:")[1].split('&')[0]
-    try:
-        name = maglink.split('&dn=')[1].split("&tr=")[0]
-        name = decodeurl(name) + ".torrent"
-        name = "".join( x for x in name if (x.isalnum() or x in "._-@ "))
-    except:
-        name = id + ".torrent"
-    os.system(f"wget https://itorrents.org/torrent/{id}.torrent")
-    os.rename(f'{id}.torrent',name)
-    return name
-
-
-def getMagnet(filename):
-    file = open(filename, "br")
-    byte_stream = file.read()
-    file.close()
-    torrentdic = bdecode(byte_stream)
-
-    result = []
-    if "info" not in torrentdic:
-        return ("No info dict in torrent file")
-    encodedInfo = bencode(torrentdic["info"])
-    sha1 = hashlib.sha1(encodedInfo).hexdigest()
-    result.append("xt=urn:btih:"+sha1)
-
     if "name" in torrentdic["info"]:
         quoted = urllib.parse.quote(torrentdic["info"]["name"], safe="")
         result.append("dn="+quoted)

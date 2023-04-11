@@ -7,7 +7,7 @@ from pyrogram.types import InlineKeyboardMarkup,InlineKeyboardButton
 import os
 import shutil
 import threading
-# import pickle
+import pickle
 import time
 import random
 
@@ -16,7 +16,6 @@ import aifunctions
 import helperfunctions
 import mediainfo
 import guess
-import tormag
 import progconv
 import others
 import tictactoe
@@ -31,18 +30,6 @@ api_id = os.environ.get("ID", "")
 # bot
 app = Client("my_bot",api_id=api_id, api_hash=api_hash,bot_token=bot_token)
 os.system("chmod 777 c41lab.py negfix8 tgsconverter")
-MESGS = {}
-
-
-# msgs functions
-def saveMsg(msg, msg_type):
-    MESGS[msg.from_user.id] = [msg, msg_type]
-
-def getSavedMsg(msg):
-    return MESGS.get(msg.from_user.id, [None, None])
-
-def removeSavedMsg(msg):
-    del MESGS[msg.from_user.id]
 
 
 # main function to follow
@@ -307,7 +294,7 @@ def follow(message,inputt,new,old,oldmessage):
 
 
     # deleting message    
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
 
 
 # negative to positive
@@ -315,29 +302,23 @@ def negetivetopostive(message,oldmessage):
     file = app.download_media(message)
     output = file.split("/")[-1]
 
-    try:
-        print("using c41lab")
-        os.system(f'./c41lab.py "{file}" "{output}"')
-        app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **c41lab**", reply_to_message_id=message.id)
-        os.remove(output)
-    except: pass
-
-    try: 
-        print("using simple tool")
-        aifunctions.positiver(file,output)
-        app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **openCV**", reply_to_message_id=message.id)
-        os.remove(output)
-    except: pass
+    print("using c41lab")
+    os.system(f'./c41lab.py "{file}" "{output}"')
+    app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **c41lab**", reply_to_message_id=message.id)
+    os.remove(output)
     
-    try:
-        print("using negfix8")
-        os.system(f'./negfix8 "{file}" "{output}"')
-        app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **negfix8**", reply_to_message_id=message.id)
-        os.remove(output)
-    except: pass
+    print("using simple tool")
+    aifunctions.positiver(file,output)
+    app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **simple tool**", reply_to_message_id=message.id)
+    os.remove(output)
+    
+    print("using negfix8")
+    os.system(f'./negfix8 "{file}" "{output}"')
+    app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **negfix8**", reply_to_message_id=message.id)
+    os.remove(output)
 
     os.remove(file)
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
 
 
 # color image
@@ -350,43 +331,54 @@ def colorizeimage(message,oldmessage):
     os.remove(output)
 
     aifunctions.colorize_image(output,file)
-    app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **Local Model**", reply_to_message_id=message.id)
+    app.send_document(message.chat.id,document=output, force_document=True,caption="used tool -> **simple tool**", reply_to_message_id=message.id)
     os.remove(output)
 
     os.remove(file)
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
 
 
 # dalle
-def genrateimages(message,prompt,msg):
+def genrateimages(message,prompt):
     
+    # requsting
+    # mdhash = aifunctions.mindalle(prompt,AutoCall=False) # min dalle
+    # ldhash = aifunctions.latdif(prompt,AutoCall=False) # latent 
+    filelist = aifunctions.dallemini(prompt) # dalle mini
+    # latfile = aifunctions.latentdiff(prompt) # latent direct
+    # imagelist = aifunctions.latdifstatus(ldhash,prompt) # latent get
+    # mdfile = aifunctions.mindallestatus(mdhash,prompt) # min dalle get
+    # sdhash = aifunctions.stablediff(prompt,AutoCall=False) # stable diff
+    # sdfile = aifunctions.stablediffstatus(sdhash,prompt) # stable diff get
+
     # dalle mini
-    filelist = aifunctions.dallemini(prompt)
     app.send_message(message.chat.id,"**DALLE MINI**", reply_to_message_id=message.id)
     for ele in filelist:
         app.send_document(message.chat.id,document=ele,force_document=True)
         os.remove(ele)
     os.rmdir(prompt)
 
-    # satbility ai
-    filelist = aifunctions.stabilityAI(prompt)
-    app.send_message(message.chat.id,"**STABLE DIFFUSION**", reply_to_message_id=message.id)
-    for ele in filelist:
-        app.send_document(message.chat.id,document=ele,force_document=True)
-        os.remove(ele)
+    # stable diffusion
+    # if sdfile !=  None:
+    #     app.send_message(message.chat.id,"**STABLE DIFFUSION**", reply_to_message_id=message.id)
+    #     app.send_document(message.chat.id,document=sdfile,force_document=True)
+    #     os.remove(sdfile)
+
+    # latent diffusion
+    # app.send_message(message.chat.id,f"__LATENT DIFFUSION :__ **{prompt}**", reply_to_message_id=message.id)
+    # app.send_document(message.chat.id,document=latfile,force_document=True)
+    # os.remove(latfile)
+    # for ele in imagelist:
+        # app.send_document(message.chat.id,document=ele,force_document=True)
+        # os.remove(ele)
+        
+    # min dalle
+    # app.send_message(message.chat.id,f"__MIN-DALLE :__ **{prompt}**", reply_to_message_id=message.id)
+    # app.send_document(message.chat.id,document=mdfile,force_document=True)
+    # os.remove(mdfile)
 
     # delete msg
-    app.delete_messages(message.chat.id,message_ids=msg.id)
-
-
-# riffusion
-def genratemusic(message,prompt,msg):
-    musicfile, thumbfile = aifunctions.riffusion(prompt)
-    app.send_audio(message.chat.id, musicfile, duration=10, performer="Riffusion", title=prompt, thumb=thumbfile, reply_to_message_id=message.id)
-    
-    os.remove(musicfile)
-    os.remove(thumbfile)
-    app.delete_messages(message.chat.id,message_ids=msg.id)
+    app.delete_messages(message.chat.id,message_ids=[message.id+1])
 
 
 # cog video
@@ -398,7 +390,7 @@ def genratevideos(message,prompt):
     file = aifunctions.cogvideostatus(hash,prompt)
     app.send_video(message.chat.id, video=file, reply_to_message_id=message.id) #,caption=f"COGVIDEO : {prompt}")
     os.remove(file)
-    app.delete_messages(message.chat.id,message_ids=msg.id)
+    app.delete_messages(message.chat.id,message_ids=[msg.id])
 
 
 # delete msg
@@ -412,7 +404,7 @@ def readf(message,oldmessage):
     file = app.download_media(message)
     
     try:
-        with open(file,"r", encoding="utf-8") as rf:
+        with open(file,"r") as rf:
             txt = rf.read()
         n = 4096
         split = [txt[i:i+n] for i in range(0, len(txt), n)]
@@ -424,11 +416,11 @@ def readf(message,oldmessage):
         for ele in split:
             app.send_message(message.chat.id, ele, disable_web_page_preview=True, reply_to_message_id=message.id)
             time.sleep(3)   
-    except Exception as e:
-            app.send_message(message.chat.id, f"__Error in Reading File : {e}__", reply_to_message_id=message.id)
+    except:
+            app.send_message(message.chat.id, "__Error in Reading File__", reply_to_message_id=message.id)
 
     os.remove(file)
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
 
 
 # send video
@@ -437,7 +429,7 @@ def sendvideo(message,oldmessage):
     thumb,duration,width,height = mediainfo.allinfo(file)
     up(message, file, msg, video=True, capt=f'**{file.split("/")[-1]}**' ,thumb=thumb, duration=duration, height=height, widht=width)
 
-    app.delete_messages(message.chat.id, message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id, message_ids=[oldmessage.id])
     os.remove(file)
 
 
@@ -446,7 +438,7 @@ def senddoc(message,oldmessage):
     file, msg = down(message)
     up(message, file, msg)
 
-    app.delete_messages(message.chat.id, message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id, message_ids=[oldmessage.id])
     os.remove(file)
 
 
@@ -454,7 +446,7 @@ def senddoc(message,oldmessage):
 def sendphoto(message,oldmessage):
     file = app.download_media(message)
     app.send_photo(message.chat.id, photo=file, reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
     os.remove(file)
 
 
@@ -476,7 +468,7 @@ def extract(message,oldm):
         dir_list = helperfunctions.absoluteFilePaths(foldername)
         if len(dir_list) > 30:
             if msg != None:
-                app.delete_messages(message.chat.id,message_ids=msg.id)
+                app.delete_messages(message.chat.id,message_ids=[msg.id])
             app.send_message(message.chat.id, f"__Number of files is **{len(dir_list)}** which is more than the limit of **30**__", reply_to_message_id=message.id)     
         else:
             for ele in dir_list:
@@ -486,15 +478,14 @@ def extract(message,oldm):
                 else:
                     app.send_message(message.chat.id, f'**{ele.split("/")[-1]}** __is Skipped because it is 0 bytes__', reply_to_message_id=message.id)
             
-            if msg != None:
-                app.delete_messages(message.chat.id,message_ids=msg.id)
+            app.delete_messages(message.chat.id,message_ids=[msg.id])
             app.send_message(message.chat.id, f'__{last}__', reply_to_message_id=message.id)
 
         shutil.rmtree(foldername)
     else:
         app.send_message(message.chat.id, "**Unable to Extract**", reply_to_message_id=message.id)
 
-    app.delete_messages(message.chat.id, message_ids=oldm.id)
+    app.delete_messages(message.chat.id, message_ids=[oldm.id])
 
 
 # getting magnet
@@ -502,7 +493,7 @@ def getmag(message,oldm):
     file = app.download_media(message)
     maglink = tormag.getMagnet(file)
     app.send_message(message.chat.id, f'__{maglink}__', reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id,message_ids=oldm.id)
+    app.delete_messages(message.chat.id,message_ids=[oldm.id])
     os.remove(file)
 
 
@@ -510,7 +501,7 @@ def getmag(message,oldm):
 def gettorfile(message,oldm):
     file = tormag.getTorFile(message.text)
     app.send_document(message.chat.id, file, reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id,message_ids=oldm.id)
+    app.delete_messages(message.chat.id,message_ids=[oldm.id])
     os.remove(file)
 
 
@@ -553,7 +544,7 @@ def compile(message,oldm):
         
 
     # python compile
-    elif ext.upper() == "PY":
+    if ext.upper() == "PY":
         file = app.download_media(message)
         cmd, output, ofold, tfold, temp = helperfunctions.pyinstallcommand(message,file)
         os.system(cmd)
@@ -578,7 +569,7 @@ def compile(message,oldm):
 
 
     # delete message
-    app.delete_messages(message.chat.id,message_ids=oldm.id)
+    app.delete_messages(message.chat.id,message_ids=[oldm.id])
 
 
 # running a program
@@ -588,11 +579,11 @@ def runpro(message,oldm):
     # python run
     if ext.upper() == "PY":
         file = app.download_media(message)
-        code = open(file,"r",encoding="utf-8").read()
+        code = open(file,"r").read()
         os.remove(file)
         info = others.pyrun(code)
         app.send_message(message.chat.id, info, reply_to_message_id=message.id)
-        app.delete_messages(message.chat.id,message_ids=oldm.id)
+        app.delete_messages(message.chat.id,message_ids=[oldm.id])
         
 
     # not supported yet
@@ -600,22 +591,12 @@ def runpro(message,oldm):
         app.send_message(message.chat.id,"__At this time Running only supports from PY Files__", reply_to_message_id=message.id)
 
 
-# bg remove
-def bgremove(message,oldm):
-    file = app.download_media(message)
-    ofile = aifunctions.bg_remove(file)
-    os.remove(file)
-    app.send_document(message.chat.id, ofile, reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id,message_ids=oldm.id)
-    os.remove(ofile)
-
-
 # scanning
 def scan(message,oldm):
     file = app.download_media(message)
     info = helperfunctions.scanner(file)
     app.send_message(message.chat.id,f"__{info}__", reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id,message_ids=oldm.id)
+    app.delete_messages(message.chat.id,message_ids=[oldm.id])
     os.remove(file)
 
 
@@ -642,7 +623,7 @@ def makefile(message,mtext,oldmessage):
     else:
         app.send_message(message.chat.id, "__Error while making file__", reply_to_message_id=message.id)
 
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
     os.remove(firstline)      	    
 
 
@@ -672,18 +653,10 @@ def transcript(message,oldmessage):
         app.send_document(message.chat.id, document=temp,caption="**OpenAI Engine** __(whisper)__", reply_to_message_id=message.id)
     os.remove(temp)
 
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
     os.remove(file)
     
-
-# text to 3d
-def textTo3d(prompt,message,msg):
-    htmlfile = aifunctions.pointE(prompt)
-    app.send_document(message.chat.id, htmlfile, reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id, message_ids=msg.id)
-    os.remove(htmlfile)
-
-
+    
 # text to speech 
 def speak(message,oldmessage):
     file = app.download_media(message)
@@ -694,7 +667,7 @@ def speak(message,oldmessage):
     os.remove(file)
 
     app.send_document(message.chat.id, document=output, reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
     os.remove(output)
 
 
@@ -703,24 +676,21 @@ def increaseres(message,oldmessage):
     file = app.download_media(message)
     inputt = file.split("/")[-1]
    
-    try:
-        aifunctions.upscale(file,inputt)
-        os.remove(file)
-        app.send_document(message.chat.id, document=inputt, reply_to_message_id=message.id)
-    except Exception as e:
-        app.send_message(message.chat.id, f"__Error : {e}__", reply_to_message_id=message.id)
-        
-    app.delete_messages(message.chat.id,message_ids=oldmessage.id)
+    aifunctions.upscale(file,inputt)
+    os.remove(file)
+
+    app.send_document(message.chat.id, document=inputt, reply_to_message_id=message.id)
+    app.delete_messages(message.chat.id,message_ids=[oldmessage.id])
     os.remove(inputt)
 
 
 # renaming
 def rname(message,newname,oldm):
-    app.delete_messages(message.chat.id,message_ids=message.id+1)
+    app.delete_messages(message.chat.id,message_ids=[message.id+1])
     file, msg = down(message)
     os.rename(file,newname)
     up(message, newname, msg)
-    app.delete_messages(message.chat.id,message_ids=oldm.id)
+    app.delete_messages(message.chat.id,message_ids=[oldm.id])
     os.remove(newname)
 
 
@@ -736,24 +706,6 @@ def saverec(message):
     username = datas[-2]
     msg  = app.get_messages(username,msgid)
     app.copy_message(message.chat.id, msg.chat.id, msg.id)
-
-
-# AI chat
-def handleAIChat(message):
-    hash = str(message.chat.id)
-    if hash[0] == "-": hash = str(hash)[1:]
-
-    app.send_chat_action(message.chat.id, enums.ChatAction.TYPING)
-    reply = aifunctions.chatWithAI(message.text, hash)
-    if reply != None: app.send_message(message.chat.id, reply, reply_to_message_id=message.id)
-    else: app.send_chat_action(message.chat.id, enums.ChatAction.CANCEL)
-
-
-# bloom
-def handelbloom(para,message,msg):
-    ans = aifunctions.bloom(para)
-    if ans is not None: app.send_message(message.chat.id, f'__{ans}__', reply_to_message_id=message.id)
-    app.delete_messages(message.chat.id, message_ids=msg.id)
 
 
 # others
@@ -782,12 +734,7 @@ def other(message):
         info = others.maths(message.text)
         if info != None:
             app.send_message(message.chat.id, info, reply_to_message_id=message.id)
-        else:
-            handleAIChat(message)
-    
-    # AI chat
-    else:
-        handleAIChat(message)
+
 
 # download with progress
 def down(message):
@@ -836,7 +783,7 @@ def up(message, file, msg, video=False, capt="", thumb=None, duration=0, widht=0
         os.remove(f'{message.id}upstatus.txt')
 
     if msg != None and not multi:
-        app.delete_messages(message.chat.id,message_ids=msg.id)
+        app.delete_messages(message.chat.id,message_ids=[msg.id])
 
 
 # up progress
@@ -904,22 +851,16 @@ def downstatus(statusfile,message):
 # app messages
 @app.on_message(filters.command(['start']))
 def start(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    app.send_message(message.chat.id, f"Welcome {message.from_user.mention}\nSend a **File** first and then you can choose **Extension**\n\n__want to know more about me ?\nuse /help - to get List of Commands\nuse /detail - to get List of Supported Extensions\n\nI also have Special AI features including ChatBot, you don't believe me? ask me anything__", reply_to_message_id=message.id)
-                     
-
-# detail
-@app.on_message(filters.command(['detail']))
-def start(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    oldm = app.send_message(message.chat.id, START_TEXT, reply_to_message_id=message.id)
+    oldm = app.send_message(message.chat.id, f"Welcome {message.from_user.mention}\nSend a **File** first and then **Extension**\n\n{START_TEXT}", reply_to_message_id=message.id)
     dm = threading.Thread(target=lambda:dltmsg(message,oldm,30),daemon=True)
-    dm.start()  
-    
+    dm.start()                        
+
 
 # help
 @app.on_message(filters.command(['help']))
 def help(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
     oldm = app.send_message(message.chat.id,
-        "__Available Commands__\n\n**/start - To Check Availabe Conversions\n/help - Help Message\n/detail - Supported Extensions\n/imagegen - Text to Image\n/musicgen - Text to Music\n/3dgen - Text to 3D\n/bloom - AI Article Writter\n/cancel - To Cancel\n/rename - To Rename File\n/read - To Read File\n/make - To Make File\n/guess - Bot will Guess\n/tictactoe - To Play Tic Tac Toe\n/source - Github Source Code\n**", reply_to_message_id=message.id)
+                     "**/start - To Check Availabe Conversions\n/help - This Message\n/imagegen - Text to Image\n/videogen - Text to Video\n/cancel - To Cancel\n/rename - To Rename File\n/read - To Read File\n/make - To Make File\n/guess - To Guess\n/tictactoe - To Play Tic Tac Toe\n/source - Github Source Code\n**", reply_to_message_id=message.id)
     dm = threading.Thread(target=lambda:dltmsg(message,oldm),daemon=True)
     dm.start() 
 
@@ -941,23 +882,26 @@ def rename(client: pyrogram.client.Client, message: pyrogram.types.messages_and_
         app.send_message(message.chat.id, "__Usage: **/rename new-file-name**\n(with extension)__", reply_to_message_id=message.id)
         return
 
-    nmessage, msg_type = getSavedMsg(message)
-    if nmessage:
+    if os.path.exists(f'{message.from_user.id}.json'):
+        with open(f'{message.from_user.id}.json', 'rb') as handle:
+            nmessage = pickle.loads(handle.read())
         oldm = app.send_message(message.chat.id, "__**Renaming**__", reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
         rn = threading.Thread(target=lambda:rname(nmessage,newname,oldm),daemon=True)
         rn.start() 
-        removeSavedMsg(message)
+        os.remove(f'{message.from_user.id}.json')
     else:
         app.send_message(message.chat.id, "__You need to send me a File first__", reply_to_message_id=message.id)   
+
 
 
 # cancel
 @app.on_message(filters.command(['cancel']))
 def cancel(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    nmessage, msg_type = getSavedMsg(message)
-    if nmessage:
-        removeSavedMsg(message)
-        app.delete_messages(message.chat.id,message_ids=nmessage.id+1)
+    if os.path.exists(f'{message.from_user.id}.json'):
+        with open(f'{message.from_user.id}.json', 'rb') as handle:
+            nmessage = pickle.loads(handle.read())
+        os.remove(f'{message.from_user.id}.json')
+        app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
         app.send_message(message.chat.id,"__Your job was **Canceled**__",reply_markup=ReplyKeyboardRemove(), reply_to_message_id=message.id)
     else:
         app.send_message(message.chat.id,"__No job to Cancel__", reply_to_message_id=message.id)     
@@ -975,34 +919,27 @@ def getpompt(client: pyrogram.client.Client, message: pyrogram.types.messages_an
 		return	
 
 	# threding	
-	msg = app.send_message(message.chat.id,"__Prompt received and Request is sent. Waiting time is 1-2 mins__", reply_to_message_id=message.id)
-	ai = threading.Thread(target=lambda:genrateimages(message,prompt,msg),daemon=True)
+	app.send_message(message.chat.id,"__Prompt received and Request is sent. Waiting time is 1-2 mins__", reply_to_message_id=message.id)
+	ai = threading.Thread(target=lambda:genrateimages(message,prompt),daemon=True)
 	ai.start()
 
 
-# music gen
-@app.on_message(filters.command(["musicgen"]))
-def getpompt(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
+# videogen command
+@app.on_message(filters.command(["videogen"]))
+def videocog(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
     
-	# getting prompt from the text
-	try:
-		prompt = message.text.split("/musicgen ")[1]
-	except:
-		app.send_message(message.chat.id,'__Send Prompt with Command,\nUsage :__ **/musicgen a slow, emotional piano ballad in the key of C Major with a tempo of 60 BPM and a time signature of 4/4.**', reply_to_message_id=message.id)
-		return	
-
-	# threding	
-	msg = app.send_message(message.chat.id,"__Prompt received and Request is sent. Waiting time is 1 minute__", reply_to_message_id=message.id)
-	mai = threading.Thread(target=lambda:genratemusic(message,prompt,msg),daemon=True)
-	mai.start()
+    app.send_message(message.chat.id,'__Currently Not Working__', reply_to_message_id=message.id)
+    return
 
 
 # read command
 @app.on_message(filters.command(['read']))
 def readcmd(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    nmessage, msg_type = getSavedMsg(message)
-    if nmessage:
-        removeSavedMsg(message)
+    if os.path.exists(f'{message.from_user.id}.json'):
+        with open(f'{message.from_user.id}.json', 'rb') as handle:
+            nmessage = pickle.loads(handle.read())
+        os.remove(f'{message.from_user.id}.json')
+
     else:
         app.send_message(message.chat.id,'__First send me a File__', reply_to_message_id=message.id)
         return
@@ -1015,9 +952,10 @@ def readcmd(client: pyrogram.client.Client, message: pyrogram.types.messages_and
 # make command
 @app.on_message(filters.command(['make']))
 def makecmd(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    nmessage, msg_type = getSavedMsg(message)
-    if nmessage:
-        removeSavedMsg(message)
+    if os.path.exists(f'{message.from_user.id}.json'):
+        with open(f'{message.from_user.id}.json', 'rb') as handle:
+            nmessage = pickle.loads(handle.read())
+        os.remove(f'{message.from_user.id}.json')
         text = nmessage.text
     else:
         try:
@@ -1029,19 +967,6 @@ def makecmd(client: pyrogram.client.Client, message: pyrogram.types.messages_and
     oldm = app.send_message(message.chat.id,'__Making File__', reply_to_message_id=message.id)
     mf = threading.Thread(target=lambda:makefile(message,text,oldm),daemon=True)
     mf.start()
-
-
-# Point E
-@app.on_message(filters.command(["3dgen"]))
-def send_gpt(client: pyrogram.client.Client,message: pyrogram.types.messages_and_media.message.Message,):
-    try: prompt = message.text.split("/3dgen ")[1]
-    except:
-        app.send_message(message.chat.id,'__Send Prompt with Command,\nUsage :__ **/3dgen a red motorcycle**', reply_to_message_id=message.id)
-        return	
-
-    msg = message.reply_text("__3Dizing...__", reply_to_message_id=message.id)
-    pnte = threading.Thread(target=lambda:textTo3d(prompt,message,msg),daemon=True)
-    pnte.start()
 
 
 # Tic Tac Toe Game
@@ -1077,22 +1002,6 @@ def startG(client: pyrogram.client.Client, message: pyrogram.types.messages_and_
                     InlineKeyboardButton( text='No', callback_data='G not')
                 ]]))
     
-
-# bloom 
-@app.on_message(filters.command("bloom"))
-def bloomcmd(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    try: para = message.reply_to_message.text
-    except:
-        try: para = message.text.split("/bloom ")[1]
-        except:
-            app.send_message(message.chat.id,'__Send Para with Command or Reply to it\n\nUsage :__ **/bloom A poem about the beauty of science**', reply_to_message_id=message.id)
-            return	
-    
-    msg = message.reply_text("__Blooming...__", reply_to_message_id=message.id)
-    blm = threading.Thread(target=lambda:handelbloom(para,message,msg),daemon=True)
-    blm.start()
-
-
 # callback
 @app.on_callback_query()
 def inbtwn(client: pyrogram.client.Client, call: pyrogram.types.CallbackQuery):
@@ -1103,7 +1012,8 @@ def inbtwn(client: pyrogram.client.Client, call: pyrogram.types.CallbackQuery):
 # document
 @app.on_message(filters.document)
 def documnet(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    saveMsg(message, "DOCUMENT")
+    with open(f'{message.from_user.id}.json', 'wb') as handle:
+            pickle.dump(message, handle)
     dext = message.document.file_name.split(".")[-1].upper()
 
     # VID / AUD
@@ -1154,13 +1064,6 @@ def documnet(client: pyrogram.client.Client, message: pyrogram.types.messages_an
                          f'__Detected Extension:__ **{dext}** 🗄\n__Do you want to Extract ?__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
                          reply_markup=ARCboard, reply_to_message_id=message.id)
 
-    # TOR
-    elif message.document.file_name.upper().endswith("TORRENT"):
-        removeSavedMsg(message)
-        oldm = app.send_message(message.chat.id,'__Getting Magnet Link__', reply_to_message_id=message.id)
-        ml = threading.Thread(target=lambda:getmag(message,oldm),daemon=True)
-        ml.start()
-        return
     
     # SUB
     elif message.document.file_name.upper().endswith(SUB):
@@ -1200,7 +1103,8 @@ def video(client: pyrogram.client.Client, message: pyrogram.types.messages_and_m
     
     try:
         if message.video.file_name.upper().endswith(VIDAUD):
-            saveMsg(message, "VIDEO")
+            with open(f'{message.from_user.id}.json', 'wb') as handle:
+                pickle.dump(message, handle)
             dext = message.video.file_name.split(".")[-1].upper()
             app.send_message(message.chat.id,
                             f'__Detected Extension:__ **{dext}** 📹 / 🔊\n__Now send extension to Convert to...__\n\n--**Available formats**-- \n\n__{VA_TEXT}__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
@@ -1218,7 +1122,8 @@ def video(client: pyrogram.client.Client, message: pyrogram.types.messages_and_m
 # video note
 @app.on_message(filters.video_note)
 def videonote(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    saveMsg(message, "VIDEO_NOTE")
+    with open(f'{message.from_user.id}.json', 'wb') as handle:
+        pickle.dump(message, handle)
     app.send_message(message.chat.id,
                 f'__Detected Extension:__ **MP4** 📹 / 🔊\n__Now send extension to Convert to...__\n\n--**Available formats**-- \n\n__{VA_TEXT}__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
                 reply_markup=VAboard, reply_to_message_id=message.id)
@@ -1228,7 +1133,8 @@ def videonote(client: pyrogram.client.Client, message: pyrogram.types.messages_a
 @app.on_message(filters.audio)
 def audio(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
     if message.audio.file_name.upper().endswith(VIDAUD):
-        saveMsg(message, "AUDIO")
+        with open(f'{message.from_user.id}.json', 'wb') as handle:
+            pickle.dump(message, handle)
         dext = message.audio.file_name.split(".")[-1].upper()
         app.send_message(message.chat.id,
                          f'__Detected Extension:__ **{dext}** 📹 / 🔊\n__Now send extension to Convert to...__\n\n--**Available formats**-- \n\n__{VA_TEXT}__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
@@ -1241,7 +1147,8 @@ def audio(client: pyrogram.client.Client, message: pyrogram.types.messages_and_m
 # voice
 @app.on_message(filters.voice)
 def voice(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    saveMsg(message, "VOICE")
+    with open(f'{message.from_user.id}.json', 'wb') as handle:
+        pickle.dump(message, handle)
     app.send_message(message.chat.id,
                 f'__Detected Extension:__ **OGG** 📹 / 🔊\n__Now send extension to Convert to...__\n\n--**Available formats**-- \n\n__{VA_TEXT}__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
                 reply_markup=VAboard, reply_to_message_id=message.id)
@@ -1250,7 +1157,8 @@ def voice(client: pyrogram.client.Client, message: pyrogram.types.messages_and_m
 # photo
 @app.on_message(filters.photo)
 def photo(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    saveMsg(message, "PHOTO")
+    with open(f'{message.from_user.id}.json', 'wb') as handle:
+        pickle.dump(message, handle)
     app.send_message(message.chat.id,
                      f'__Detected Extension:__ **JPG** 📷\n__Now send extension to Convert to...__\n\n--**Available formats**-- \n\n__{IMG_TEXT}__\n\n**SPECIAL** 🎁\n__Colorize, Positive, Upscale & Scan__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
                      reply_markup=IMGboard, reply_to_message_id=message.id)
@@ -1259,7 +1167,8 @@ def photo(client: pyrogram.client.Client, message: pyrogram.types.messages_and_m
 # sticker
 @app.on_message(filters.sticker)
 def sticker(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
-    saveMsg(message, "STICKER")
+    with open(f'{message.from_user.id}.json', 'wb') as handle:
+            pickle.dump(message, handle)
     if not message.sticker.is_animated and not message.sticker.is_video:
         app.send_message(message.chat.id,
                      f'__Detected Extension:__ **WEBP** 📷\n__Now send extension to Convert to...__\n\n--**Available formats**-- \n\n__{IMG_TEXT}__\n\n**SPECIAL** 🎁\n__Colorize, Positive, Upscale & Scan__\n\n{message.from_user.mention} __choose or click /cancel to Cancel or use /rename  to  Rename__',
@@ -1288,129 +1197,150 @@ def text(client: pyrogram.client.Client, message: pyrogram.types.messages_and_me
         return
 
     # normal
-    nmessage, msg_type = getSavedMsg(message)
-    if nmessage:
-        removeSavedMsg(message)
-        app.delete_messages(message.chat.id,message_ids=nmessage.id+1)
+    if os.path.exists(f'{message.from_user.id}.json'):
+        with open(f'{message.from_user.id}.json', 'rb') as handle:
+            nmessage = pickle.loads(handle.read())
+        os.remove(f'{message.from_user.id}.json')
 
-        if "COLOR" == message.text:
+        if "COLOR" == message.text or "POSITIVE" == message.text:
+
             oldm = app.send_message(message.chat.id,'__Processing__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id) 
-            col = threading.Thread(target=lambda:colorizeimage(nmessage,oldm),daemon=True)
-            col.start()
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
 
-        elif "POSITIVE" == message.text:
-            oldm = app.send_message(message.chat.id,'__Processing__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id) 
-            pos = threading.Thread(target=lambda:negetivetopostive(nmessage,oldm),daemon=True)
-            pos.start() 
+            if "COLOR" in message.text:
+                col = threading.Thread(target=lambda:colorizeimage(nmessage,oldm),daemon=True)
+                col.start()
+                return
+            else:
+                pos = threading.Thread(target=lambda:negetivetopostive(nmessage,oldm),daemon=True)
+                pos.start() 
+                return
 
-        elif "READ" == message.text:
+        if "READ" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Reading File__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             rf = threading.Thread(target=lambda:readf(nmessage,oldm),daemon=True)
             rf.start()
+            return
 
-        elif "SENDPHOTO" == message.text:
+        if "SENDPHOTO" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Sending in Photo Format__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             sp = threading.Thread(target=lambda:sendphoto(nmessage,oldm),daemon=True)
             sp.start()
+            return
 
-        elif "SENDDOC" == message.text:
+        if "SENDDOC" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Sending in Document Format__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             sd = threading.Thread(target=lambda:senddoc(nmessage,oldm),daemon=True)
-            sd.start()  
+            sd.start()
+            return    
 
-        elif "SENDVID" == message.text:
+        if "SENDVID" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Sending in Stream Format__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             sv = threading.Thread(target=lambda:sendvideo(nmessage,oldm),daemon=True)
             sv.start()
+            return
 
-        elif "SpeechToText" == message.text:
+        if "SpeechToText" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Transcripting, takes long time for Long Files__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             stt = threading.Thread(target=lambda:transcript(nmessage,oldm),daemon=True)
             stt.start()
+            return
 
-        elif "TextToSpeech" == message.text:
+        if "TextToSpeech" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Generating Speech__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             tts = threading.Thread(target=lambda:speak(nmessage,oldm),daemon=True)
             tts.start()
+            return
 
-        elif "UPSCALE" == message.text:
+        if "UPSCALE" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Upscaling Your Image__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             upscl = threading.Thread(target=lambda:increaseres(nmessage,oldm),daemon=True)
             upscl.start()
+            return
 
-        elif "EXTRACT" == message.text:
+        if "EXTRACT" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Extracting File__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             ex = threading.Thread(target=lambda:extract(nmessage,oldm),daemon=True)
             ex.start()
+            return 
 
-        elif "COMPILE" == message.text:
+        if "COMPILE" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Compiling__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             cmp = threading.Thread(target=lambda:compile(nmessage,oldm),daemon=True)
             cmp.start()
+            return
 
-        elif "SCAN" == message.text:
+        if "SCAN" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Scanning__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             scn = threading.Thread(target=lambda:scan(nmessage,oldm),daemon=True)
             scn.start()
+            return
 
-        elif "RUN" == message.text:
+        if "RUN" == message.text:
+            app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
             oldm = app.send_message(message.chat.id,'__Running__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
             rpro = threading.Thread(target=lambda:runpro(nmessage,oldm),daemon=True)
             rpro.start()
+            return
 
-        elif "BG REMOVE" == message.text:
-            oldm = app.send_message(message.chat.id,'__Background Removing__',reply_markup=ReplyKeyboardRemove(), reply_to_message_id=nmessage.id)
-            bgrm = threading.Thread(target=lambda:bgremove(nmessage,oldm),daemon=True)
-            bgrm.start()
-
-        elif msg_type == "DOCUMENT":
+        if "document" in str(nmessage):
             inputt = nmessage.document.file_name
             print("File is a Document")
-            
-        elif msg_type == "AUDIO" or msg_type == "VOICE":
-            try:
-                inputt = nmessage.audio.file_name
-                print("File is a Audio")
-            except:
-                inputt = "voice.ogg"
-                print("File is a Voice")
-
-        elif msg_type == "VOICE":
-            inputt = "voice.ogg"
-            print("File is a Voice")
-
-        elif msg_type == "STICKER":
-            if (not nmessage.sticker.is_animated) and (not nmessage.sticker.is_video):
-                inputt = nmessage.sticker.set_name + ".webp"
-            else:
-                inputt = nmessage.sticker.set_name + ".tgs"
-            print("File is a Sticker")
-
-        elif msg_type == "VIDEO":
-            try:
-                inputt = nmessage.video.file_name
-                print("File is a Video")
-            except:
-                inputt = "video_note.mp4"
-                print("File is a Video Note")
-   
-        elif msg_type == "VIDEO_NOTE":
-            inputt = "voice_note.mp4"
-            print("File is a Video Note")  
- 
-        elif msg_type == "PHOTO":
-            temp = app.download_media(nmessage)
-            inputt = temp.split("/")[-1]
-            os.remove(temp)
-            print("File is a Photo")
-
         else:
-            if str(message.from_user.id) == str(message.chat.id):
-                app.send_message(message.chat.id, '__Not in any Supported Format, Contact the Developer__', reply_to_message_id=nmessage.id, reply_markup=ReplyKeyboardRemove())
-            return
+            if "audio" in str(nmessage) or "voice" in str(nmessage):
+                try:
+                    inputt = nmessage.audio.file_name
+                    print("File is a Audio")
+                except:
+                    inputt = "voice.ogg"
+                    print("File is a Voice")
+            else:
+                if "voice" in str(nmessage):
+                    inputt = "voice.ogg"
+                    print("File is a Voice")
+                else:
+                    if "sticker" in str(nmessage):
+                        if (not nmessage.sticker.is_animated) and (not nmessage.sticker.is_video):
+                            inputt = nmessage.sticker.set_name + ".webp"
+                        else:
+                            inputt = nmessage.sticker.set_name + ".tgs"
+                        print("File is a Sticker")
+                    else:
+                        if "video" in str(nmessage):
+                            try:
+                                inputt = nmessage.video.file_name
+                                print("File is a Video")
+                            except:
+                                inputt = "video_note.mp4"
+                                print("File is a Video Note")     
+                        else:
+                            if "video_note" in str(nmessage):
+                                inputt = "voice_note.mp4"
+                                print("File is a Video Note")   
+                            else:
+                                if "photo" in str(nmessage):
+                                    temp = app.download_media(nmessage)
+                                    inputt = temp.split("/")[-1]
+                                    os.remove(temp)
+                                    print("File is a Photo")
+                                else:
+                                    inputt = ""
 
         newext = message.text.lower()
         oldext = inputt.split(".")[-1]
+
+        #if newext == "ico":
+            #app.send_message(message.chat.id, "Warning: for ICO, image will be resized and made multi-resolution", reply_to_message_id=message.id)
         
         if oldext.upper() == newext.upper():
             app.send_message(message.chat.id, "__Nice try, Don't choose same Extension__", reply_to_message_id=nmessage.id, reply_markup=ReplyKeyboardRemove())
@@ -1420,14 +1350,19 @@ def text(client: pyrogram.client.Client, message: pyrogram.types.messages_and_me
             conv = threading.Thread(target=lambda: follow(nmessage, inputt, newext, oldext, msg), daemon=True)
             conv.start()
 
+        app.delete_messages(message.chat.id,message_ids=[nmessage.id+1])
+
     else:
+        with open(f'{message.from_user.id}.json', 'wb') as handle:
+            pickle.dump(message, handle)
         if str(message.from_user.id) == str(message.chat.id):
             if len(message.text.split("\n")) == 1:
+                os.remove(f'{message.from_user.id}.json')
                 ots = threading.Thread(target=lambda: other(message), daemon=True)
                 ots.start()
-            else: 
-                saveMsg(message, "TEXT")  
+            else:    
                 app.send_message(message.chat.id, '__for Text messages, You can use **/make** to Create a File from it.\n(first line of text will be trancated and used as filename)__', reply_to_message_id=message.id)
+            
 
 #apprun
 print("Bot Started")
